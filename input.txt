@@ -1,0 +1,4 @@
+move_x=10
+move_y=6
+move_x=-10
+move_y=-5
