@@ -3,7 +3,7 @@ all: interface_sm35
 LIBRARY_DIR=./lib
 
 interface_sm35 : main.cpp libComLib.so libStepMotorLib.so
-	g++ -Wall -O2 -o interface.exe main.cpp -I${LIBRARY_DIR} -L${LIBRARY_DIR} -lComLib -lStepMotorLib -lboost_program_options
+	g++ -Wall -O2 -o interface.exe main.cpp -I${LIBRARY_DIR} -L${LIBRARY_DIR} -lComLib -lStepMotorLib -lboost_program_options -lncurses
 
 libComLib.so : ComLib.o
 	ar rcs lib/libComLib.so lib/ComLib.o
