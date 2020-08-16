@@ -9,7 +9,7 @@ quando lendo de um arquivo**
 
 Instalação
  
-Instale na maquina as dependencias Lib Boost Program Options e NCurses
+Instale na maquina as dependencias Lib Boost Program Options
 Entre no Diretorio do programa
 Execute:
   make
