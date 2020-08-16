@@ -12,10 +12,11 @@
 #include <string.h>
 #include <ComLib.h>
 #include <StepMotor.h>
+//#include <iostream>
 #include <map>
 #include <utility>
 #include <string>
-#include <ncurses.h>
+//#include <algorithm>
 #include <fstream>
 #include <boost/program_options.hpp>
 
@@ -39,8 +40,8 @@ typedef struct _data
 } Data;
 
 int userInterace(int*, int*,string);
-Data CommandtoData(char *cmd);
 int RealTimeControl(int*, int*,variables_map);
+Data CommandtoData(char *cmd);
 int ReadConfig(variables_map,StepMotor*, StepMotor*);
 int forbidenCommand(StepMotor *eixo, float a);
 
@@ -148,38 +149,37 @@ int userInterace(int *parentPipe, int *childPipe, string _file)
     if(_file.size() > 0)
       inputFile = fopen(_file.c_str(), "r");
 
+    if(inputFile != NULL) stdin = inputFile;
+    //else inputFile = stdin;
+
     while(1)
     {
-      if(inputFile == NULL)
+      if(getline(&input, &inputSize, stdin) == -1)
       {
-        getline(&input, &inputSize, stdin);
+          tosend =
+          {
+              .function = -2, // RealTimeControl interpreta como exit
+              .eixo = 'c',
+              .number =  0,
+          };
+          write(parentPipe[1], &tosend, sizeof(tosend));
+          if(!feedback) break;
+          else continue;
       }
-      else
+      if(!strcmp(input,"exit\n"))
       {
-        if(getline(&input, &inputSize, stdin) > 0);
-        else if(getline(&input, &inputSize, inputFile ) == -1)
-        {
-            tosend =
-            {
-                .function = -2, // RealTimeControl interpreta como exit
-                .eixo = 'c',
-                .number =  0,
-            };
-            write(parentPipe[1], &tosend, sizeof(tosend));
-            if(!feedback) break;
-            else continue;
-        }
+          tosend =
+          {
+              .function = -2,   //RealTimeControl interpreta como exit
+              .eixo = '\0',
+              .number =  0,
+          };
+          write(parentPipe[1], &tosend, sizeof(tosend));
+          if(!feedback) break;
+          else continue;
       }
 
       tosend = CommandtoData(input);
-
-      if(tosend.function == -2)
-      {
-        write(parentPipe[1], &tosend, sizeof(tosend) );
-        if(!feedback) break;
-        else continue;
-      }
-
 
       if(tosend.function == -1)
       {
@@ -273,17 +273,6 @@ Data CommandtoData(char *cmd)
         .eixo = c,
         .number =  a,
     };
-
-    if(!strcmp(cmd ,"exit\n"))
-    {
-        ret =
-        {
-            .function = -2,   //RealTimeControl interpreta como exit
-            .eixo = '\0',
-            .number =  0,
-        };
-        return ret;
-    }
 
     if(functionMap.size() == 0)
     {
