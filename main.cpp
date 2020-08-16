@@ -139,40 +139,24 @@ int userInterace(int *parentPipe, int *childPipe, string _file)
         "Motor Executando comando\n",
         "Erro de comunicação com smc35\n"
     };
-
-    char str[64];
     static int feedback = 1;
     char *input = NULL;
     size_t inputSize = 0;
     Data tosend;
     FILE *inputFile = NULL;
 
-    int row, col;
-
-    initscr();				/* start the curses mode */
-    getmaxyx(stdscr,row,col);		/* get the number of rows and columns */
-    mvprintw(0,col/2,"Interface de Controle do SMC35");
-                       		/* print the message at the center of the screen */
-    move(row,0);
-
     if(_file.size() > 0)
-    {
       inputFile = fopen(_file.c_str(), "r");
-      nodelay(stdscr, TRUE);
-    }
-    //getstr(str);
-    //mvprintw(LINES - 2, 0, "You Entered: %s", str);
-  	//getch();			/* Wait for user input */
 
     while(1)
     {
       if(inputFile == NULL)
       {
-        getstr(str);
+        getline(&input, &inputSize, stdin);
       }
       else
       {
-        if(getstr(str) != ERR);
+        if(getline(&input, &inputSize, stdin) > 0);
         else if(getline(&input, &inputSize, inputFile ) == -1)
         {
             tosend =
@@ -185,10 +169,9 @@ int userInterace(int *parentPipe, int *childPipe, string _file)
             if(!feedback) break;
             else continue;
         }
-        else strcpy(str,input);
       }
 
-      tosend = CommandtoData(str);
+      tosend = CommandtoData(input);
 
       if(tosend.function == -2)
       {
@@ -200,21 +183,17 @@ int userInterace(int *parentPipe, int *childPipe, string _file)
 
       if(tosend.function == -1)
       {
-          printw("Comando não encontrado\n");	/* Print Hello World		  */
-          refresh();			/* Print it on to the real screen */
+          printf("Comando não encontrado\n");
           continue;
       }
 
       write(parentPipe[1], &tosend, sizeof(tosend) );
 
       read(childPipe[0], &feedback, sizeof(int));
-      printw(msg[feedback]);
-      refresh();			/* Print it on to the real screen */
+      printf(msg[feedback]);
       //printf("read\n");
-
     }
 
-    endwin();
     close(parentPipe[1]);
     close(childPipe[0]);
     fflush(stdout);
@@ -295,7 +274,7 @@ Data CommandtoData(char *cmd)
         .number =  a,
     };
 
-    if(!strcmp(cmd ,"exit"))
+    if(!strcmp(cmd ,"exit\n"))
     {
         ret =
         {
